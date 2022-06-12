@@ -1,7 +1,9 @@
 import Web3 from 'web3'
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 
 export default function App() {
+    const sendTarget = useRef()
+
     //! 토큰의 정보 JSON파일 불러오기
     const TokenJSON = require('./Data/Web3Token/Web3Token.json')
 
@@ -135,6 +137,38 @@ export default function App() {
             .then((result) => console.log(result))
     }
 
+    //! 토큰을 다른 유저에게 전달
+
+    //! NUBICoin 정보 불러오기
+    const NUBICoin = require('./Data/NUBI/NUBICoin.json')
+
+    //! NUBI Coin 배포
+    const deployNUBICoin = () => {
+        const newContract = new web3.eth.Contract(NUBICoin.abi)
+
+        const payload = {
+            data: NUBICoin.bytecode,
+        }
+
+        const deployParams = {
+            from: walletAddress,
+        }
+
+        newContract
+            .deploy(payload)
+            .send(deployParams, (err, transactionHash) => {
+                if (err) console.log('ERROR!!!')
+                else console.log('TransactionHash: ', transactionHash)
+            })
+            .on('confirmation', () => {})
+            .then((newContractInstance) => {
+                console.log(
+                    'Deployed Contract Address : ',
+                    newContractInstance.options.address
+                )
+            })
+    }
+
     return (
         <div className="App">
             <h1>메타마스크 연결 테스트</h1>
@@ -160,6 +194,15 @@ export default function App() {
             </div>
             <div>
                 <button onClick={mintNFT}>토큰 민팅</button>
+            </div>
+            <div>
+                <input ref={sendTarget} />
+                <button>해당 주소로 토큰 전달</button>
+            </div>
+            <br />
+            <h1>NUBI Coin</h1>
+            <div>
+                <button onClick={deployNUBICoin}>NUBI Coin 배포</button>
             </div>
         </div>
     )
